@@ -47,14 +47,17 @@ sgdisk -c 1:"UEFISYS" ${DISK}
 sgdisk -c 2:"ROOT" ${DISK}
 
 # make filesystems
+echo -e "\nPlease select a filesystem type:\next4\nbtrfs"
+echo "Filesystem Selection: "
+read FILESYSTEM
 echo -e "\nCreating Filesystems...\n$HR"
 
 mkfs.vfat -F32 -n "UEFISYS" "${DISK}1"
-mkfs.ext4 -L "ROOT" "${DISK}2"
+mkfs.${FILESYSTEM} -L "ROOT" "${DISK}2"
 
 # mount target
 mkdir /mnt
-mount -t ext4 "${DISK}2" /mnt
+mount -t ${FILESYSTEM} "${DISK}2" /mnt
 mkdir /mnt/boot
 mkdir /mnt/boot/efi
 mount -t vfat "${DISK}1" /mnt/boot/
@@ -62,7 +65,7 @@ mount -t vfat "${DISK}1" /mnt/boot/
 echo "--------------------------------------"
 echo "-- Arch Install on Main Drive       --"
 echo "--------------------------------------"
-pacstrap /mnt base base-devel linux linux-firmware vim nano sudo --noconfirm --needed
+pacstrap /mnt base base-devel linux linux-lts linux-zen linux-firmware vim nano sudo --noconfirm --needed
 genfstab -U /mnt >> /mnt/etc/fstab
 arch-chroot /mnt
 
@@ -71,9 +74,9 @@ echo "-- Bootloader Systemd Installation  --"
 echo "--------------------------------------"
 bootctl install
 cat <<EOF > /boot/loader/entries/arch.conf
-title Arch Linux  
-linux /vmlinuz-linux  
-initrd  /initramfs-linux.img  
+title Arch Linux
+linux /vmlinuz-linux
+initrd  /initramfs-linux.img
 options root=${DISK}1 rw
 EOF
 
